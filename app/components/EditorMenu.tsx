@@ -63,7 +63,6 @@ export default function EditorMenuMonaco() {
       colors: {},
     });
 
-    // Completion provider (very basic)
     monaco.languages.registerCompletionItemProvider("sf", {
       provideCompletionItems: (model: any, position: any) => {
         const suggestions = [
@@ -100,7 +99,6 @@ export default function EditorMenuMonaco() {
 
   useEffect(() => {
     return () => {
-      // cleanup
       monacoRef.current = null;
     };
   }, []);
