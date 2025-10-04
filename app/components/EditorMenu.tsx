@@ -7,24 +7,34 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
 });
 
-const defaultCode = `class Person
-  fun _init (self, age)
-    self.age = age
+const defaultCode = `import 'file' as f
 
-  fun can_vote (self)
-    return self.age >= 18
+class Variable
+  name = none
+  value = none
 
-  fun vote (self)
-    if not self.can_vote ()
-      return ? "Person cannot vote"
-    write ("Voted!")
+  fun _init (self, name, value)
+    self.name = name
+    self.value = value
+  
+  fun print (self)
+    write (name, '=', value)
 
-a = Person (18)
-try
-  a.vote ()
-catch E
-  write (E)
+file = f.open ('.env', 'r')
 
+data = file.read ()
+vars = []
+
+for i in data.split ('\\n')
+  # split at first '='
+  [name, value] = i.partition ('=')
+  vars.push (Variable (name, value))
+
+write ("------ ENV VARIABLES ------")
+for i in vars
+  i.print ()
+
+file.close ()
 `;
 
 export default function EditorMenuMonaco() {
@@ -37,12 +47,13 @@ export default function EditorMenuMonaco() {
       defaultToken: "",
       tokenizer: {
         root: [
-          [/\/\/.*$/, "comment"],
-          [/\"([^"\\]|\\.)*\"/, "string"],
+          [/#.*/, "comment"],
+          [/(\"([^"\\]|\\.)*\")|(\'([^'\\]|\\.)*\')/, "string"],
           [
-            /(\bfun\b|\blet\b|\bif\b|\belse\b|\breturn\b|\bfor\b|\bwhile\b|\bclass\b|\btry\b|\bcatch\b)/,
+            /(\bfun\b|\blet\b|\bif\b|\belse\b|\breturn\b|\bfor\b|\bwhile\b|\bclass\b|\btry\b|\bcatch\b|\bimport\b|\bas\b)/,
             "keyword",
           ],
+          [/\bnone\b/, "type"],
           [/\b[0-9]+\b/, "number"],
           [/[a-zA-Z_][a-zA-Z0-9_]*/, "identifier"],
           [/[{}()\[\]]/, "@brackets"],
