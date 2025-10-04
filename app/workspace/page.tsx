@@ -24,6 +24,8 @@ import {
 import { Inter, Roboto } from "next/font/google";
 import { useRef, useState, useEffect } from "react";
 
+import EditorMenuMonaco from "../components/EditorMenu";
+
 const subheadingFont = Inter({
   subsets: ["latin"],
 });
@@ -297,14 +299,6 @@ function RightsideBar() {
   );
 }
 
-function EditorMenu() {
-  return (
-    <div>
-      <h1>someone help me with an editor pls</h1>
-    </div>
-  );
-}
-
 export default function Workspace() {
   return (
     <div className="h-screen max-h-screen overflow-hidden w-full bg-gray-100 flex flex-col">
@@ -366,7 +360,7 @@ export default function Workspace() {
 
         <div className="col-span-15">
           <div className="h-full">
-            <EditorMenu />
+            <EditorMenuMonaco />
           </div>
         </div>
 
