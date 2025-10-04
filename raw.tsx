@@ -1,9 +1,6 @@
 import { Inter, Roboto_Slab } from "next/font/google";
 import Image from "next/image";
 import avatars from "./avatarlist";
-import Link from "next/link";
-
-import AvatarGuestPNG from "./assets/avatarguest.png";
 
 const headingFont = Roboto_Slab({
   subsets: ["latin"],
@@ -16,7 +13,7 @@ const subheadingFont = Inter({
 export default function Home() {
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="w-3xl flex flex-col justify-center items-center bg-indigo-300/20 border border-indigo-300 shadow-xl py-8 rounded-xl">
+      <div className="w-3xl flex flex-col justify-center items-center">
         <h1 className={`text-4xl font-bold ${headingFont.className}`}>
           Welcome to{" "}
           <span className="font-extrabold bg-gradient-to-b from-indigo-600/60 to-blue-600/90 text-transparent bg-clip-text">
@@ -31,7 +28,7 @@ export default function Home() {
 
           {/* single user */}
           <div className="flex flex-col gap-4 mt-4 border p-4 rounded-xl border-indigo-400 bg-gradient-to-tr from-indigo-600/20 to-blue-600/30 cursor-pointer hover:to-blue-600/40">
-            <div className="flex gap-4">
+            <div className="flex gap-12">
               <Image
                 src={avatars[0].image}
                 width={100}
@@ -86,43 +83,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {/* continue as guest */}
-          <Link
-            href={"/dashboard"}
-            className="flex flex-col gap-4 mt-4 border p-4 rounded-xl border-gray-400 bg-gradient-to-tr from-gray-600/20 to-black/10 cursor-pointer"
-          >
-            <div className="flex gap-4">
-              <Image
-                src={AvatarGuestPNG}
-                width={100}
-                height={100}
-                alt="avatar"
-                className="w-12 h-12 rounded-full opacity-50"
-              />
-
-              <div className="flex flex-col">
-                <h1 className="font-bold">Guest</h1>
-                <h1 className="font-light text-sm">Continue as Guest</h1>
-              </div>
-            </div>
-          </Link>
         </div>
-        <div className="mt-16 flex gap-4">
-          <Link href={"#"} className="text-sm underline hover:text-indigo-600">
-            Add account
-          </Link>
-
-          <Link href={"#"} className="text-sm underline hover:text-indigo-600">
-            Create account
-          </Link>
-        </div>
-      </div>
-
-      <div className="absolute bottom-0 pb-4">
-        <h1 className="text-xs">
-          © 2025 SFStudio, Sunflower. All Rights Reserved
-        </h1>
       </div>
     </div>
   );
