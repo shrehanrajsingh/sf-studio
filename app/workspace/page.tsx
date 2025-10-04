@@ -177,7 +177,35 @@ const folderView = [
   {
     name: "External Libraries",
     type: "folder",
-    data: [],
+    data: [
+      {
+        name: "sf-xml",
+        type: "folder",
+        data: [
+          { name: ".gitignore", type: "file" },
+          { name: "main.sf", type: "file" },
+          { name: ".sf.env", type: "file" },
+        ],
+      },
+      {
+        name: "lilac-ui",
+        type: "folder",
+        data: [
+          { name: ".gitignore", type: "file" },
+          { name: "main.sf", type: "file" },
+          { name: ".sf.env", type: "file" },
+        ],
+      },
+      {
+        name: "april",
+        type: "folder",
+        data: [
+          { name: ".gitignore", type: "file" },
+          { name: "main.sf", type: "file" },
+          { name: ".sf.env", type: "file" },
+        ],
+      },
+    ],
   },
   {
     name: "Scratches and Consoles",
@@ -199,7 +227,7 @@ function MakeFolderView({ folder }: any) {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full">
       {Array.isArray(folder) ? (
         <ul className="space-y-1">
           {folder.map((item, index) => {
@@ -270,212 +298,16 @@ function RightsideBar() {
 }
 
 function EditorMenu() {
-  const [code, setCode] = useState(`class Person
-  fun _init (self, age)
-    self.age = age
-
-  fun can_vote (self)
-    return self.age >= 18
-
-  fun vote (self)
-    if not self.can_vote ()
-      return ? "Person cannot vote"
-    write ("Voted!")
-
-a = Person (18)
-try
-  a.vote ()
-catch E
-  write (E)
-`);
-
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const preRef = useRef<HTMLDivElement | null>(null);
-  const gutterRef = useRef<HTMLDivElement | null>(null);
-
-  type Token = { type: string; value: string };
-
-  function escapeHtml(s: string) {
-    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
-  function tokenize(text: string): Token[] {
-    const patterns: { type: string; regex: RegExp }[] = [
-      { type: "comment", regex: /\/\/.*$/gm },
-      { type: "string", regex: /"([^"\\]|\\.)*"|'([^'\\]|\\.)*'/g },
-      { type: "number", regex: /\b\d+(?:\.\d+)?\b/g },
-      {
-        type: "keyword",
-        regex:
-          /\b(fun|class|_init|self|return|if|else|for|while|repeat|try|catch|write)\b/g,
-      },
-      { type: "type", regex: /\b(number|string|void|boolean)\b/g },
-      { type: "identifier", regex: /\b[a-zA-Z_][a-zA-Z0-9_]*\b/g },
-      { type: "operator", regex: /==|!=|<=|>=|=>|\+\+|--|[+\-*/%=<>!&|:^~]/g },
-      { type: "whitespace", regex: /\s+/g },
-      { type: "other", regex: /./g },
-    ];
-
-    const tokens: Token[] = [];
-    let pos = 0;
-    const N = text.length;
-
-    while (pos < N) {
-      let matched = false;
-      for (const p of patterns) {
-        p.regex.lastIndex = pos;
-        const m = p.regex.exec(text);
-        if (m && m.index === pos) {
-          tokens.push({ type: p.type, value: m[0] });
-          pos += m[0].length;
-          matched = true;
-          break;
-        }
-      }
-      if (!matched) {
-        tokens.push({ type: "other", value: text[pos] });
-        pos += 1;
-      }
-    }
-    return tokens;
-  }
-
-  function toHighlightedHtml(text: string) {
-    const tokens = tokenize(text);
-    let out = "";
-    for (const t of tokens) {
-      const v = escapeHtml(t.value);
-      switch (t.type) {
-        case "comment":
-          out += `<span class="text-gray-500 italic">${v}</span>`;
-          break;
-        case "string":
-          out += `<span class="text-green-600">${v}</span>`;
-          break;
-        case "number":
-          out += `<span class="text-orange-600">${v}</span>`;
-          break;
-        case "keyword":
-          out += `<span class="text-purple-600 font-medium">${v}</span>`;
-          break;
-        case "type":
-          out += `<span class="text-blue-600">${v}</span>`;
-          break;
-        case "identifier":
-          out += `${v}`;
-          break;
-        case "operator":
-          out += `<span class="text-pink-500">${v}</span>`;
-          break;
-        case "whitespace":
-          // preserve newlines and spaces precisely for alignment
-          out += v
-            .replace(/\n/g, "<br/>")
-            .replace(/ /g, "&nbsp;")
-            .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
-          break;
-        default:
-          out += v;
-      }
-    }
-    return out;
-  }
-
-  const [html, setHtml] = useState(() => toHighlightedHtml(code));
-
-  useEffect(() => {
-    setHtml(toHighlightedHtml(code));
-    // after update, keep scroll positions in sync
-    requestAnimationFrame(() => {
-      if (preRef.current && textareaRef.current && gutterRef.current) {
-        preRef.current.scrollTop = textareaRef.current.scrollTop;
-        preRef.current.scrollLeft = textareaRef.current.scrollLeft;
-        gutterRef.current.scrollTop = textareaRef.current.scrollTop;
-      }
-    });
-  }, [code]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setCode(e.target.value);
-  };
-
-  const handleScroll = () => {
-    if (!preRef.current || !textareaRef.current || !gutterRef.current) return;
-    preRef.current.scrollTop = textareaRef.current.scrollTop;
-    preRef.current.scrollLeft = textareaRef.current.scrollLeft;
-    gutterRef.current.scrollTop = textareaRef.current.scrollTop;
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Tab") {
-      e.preventDefault();
-      const ta = textareaRef.current!;
-      const start = ta.selectionStart ?? 0;
-      const end = ta.selectionEnd ?? 0;
-      const newCode = code.slice(0, start) + "  " + code.slice(end);
-      setCode(newCode);
-      requestAnimationFrame(() => {
-        if (textareaRef.current)
-          textareaRef.current.selectionStart =
-            textareaRef.current.selectionEnd = start + 2;
-      });
-    }
-  };
-
   return (
-    <div className="h-full max-h-full flex flex-col">
-      <div className="p-2 border-b border-b-gray-300 bg-gray-100 flex items-center gap-2">
-        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm font-medium">
-          main.sf
-        </span>
-        <span className="text-xs text-gray-500">SF Language</span>
-      </div>
-
-      <div className="grow bg-white flex flex-col overflow-hidden">
-        <div className="h-full w-full p-4 overflow-hidden">
-          <div className="flex bg-gray-50 rounded-lg h-full text-sm relative overflow-hidden">
-            <div
-              ref={gutterRef}
-              className="bg-gray-100 py-4 px-2 text-right text-gray-400 select-none w-12 font-mono overflow-y-hidden sticky left-0 z-10"
-            >
-              {code.split("\n").map((_, i) => (
-                <div key={i} className="h-6 leading-6">
-                  {i + 1}
-                </div>
-              ))}
-            </div>
-
-            <div className="relative flex-1 h-full overflow-auto">
-              <div
-                ref={preRef}
-                className="m-0 p-4 font-mono text-sm leading-6 text-left whitespace-pre pointer-events-none absolute top-0 left-0 right-0 bottom-0"
-                aria-hidden
-                dangerouslySetInnerHTML={{ __html: html }}
-                style={{ boxSizing: "border-box" }}
-              />
-
-              <textarea
-                ref={textareaRef}
-                value={code}
-                onChange={handleChange}
-                onScroll={handleScroll}
-                onKeyDown={handleKeyDown}
-                wrap="off"
-                className="absolute top-0 left-0 w-full h-full p-4 resize-none bg-transparent text-transparent caret-black outline-none font-mono text-sm leading-6"
-                spellCheck={false}
-                style={{ boxSizing: "border-box" }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+    <div>
+      <h1>someone help me with an editor pls</h1>
     </div>
   );
 }
 
 export default function Workspace() {
   return (
-    <div className="h-screen max-h-screen w-full bg-gray-100 flex flex-col">
+    <div className="h-screen max-h-screen overflow-hidden w-full bg-gray-100 flex flex-col">
       <div className="w-full flex items-center gap-2 px-4 py-3 bg-[rgb(53,86,149)]">
         <BoxesIcon fill="#fff" />
         <span
@@ -527,7 +359,7 @@ export default function Workspace() {
             </h1>
           </div>
 
-          <div className="p-4">
+          <div className="p-4 max-h-[68vh] overflow-scroll">
             <MakeFolderView folder={folderView} />
           </div>
         </div>
