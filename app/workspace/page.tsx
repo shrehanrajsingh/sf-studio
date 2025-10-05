@@ -25,6 +25,8 @@ import { Inter, Roboto } from "next/font/google";
 import { useRef, useState, useEffect } from "react";
 
 import EditorMenuMonaco from "../components/EditorMenu";
+import { useExplorer } from "../store/useExplorer";
+import { useFileEntry } from "../store/useFiletab";
 
 const subheadingFont = Inter({
   subsets: ["latin"],
@@ -155,23 +157,23 @@ const folderView = [
     name: "TestApplication1",
     type: "folder",
     data: [
-      { name: ".gitignore", type: "file" },
-      { name: "main.sf", type: "file" },
-      { name: ".sf.env", type: "file" },
+      { name: ".gitignore", type: "file", content: ".env\n.sf.env" },
+      { name: "main.sf", type: "file", content: 'write ("Hello, World!")' },
+      { name: ".sf.env", type: "file", content: "SF_CACHE_DIR=sfcache/\n" },
       {
         name: "build",
         type: "folder",
         data: [
-          { name: ".cache1", type: "file" },
-          { name: ".cache2", type: "file" },
+          { name: ".cache1", type: "file", content: "// cache goes here" },
+          { name: ".cache2", type: "file", content: "// cache goes here" },
         ],
       },
       {
         name: "tests",
         type: "folder",
         data: [
-          { name: "test1.sf", type: "file" },
-          { name: "test2.sf", type: "file" },
+          { name: "test1.sf", type: "file", content: 'write ("Test 1")' },
+          { name: "test2.sf", type: "file", content: 'write ("Test 2")' },
         ],
       },
     ],
@@ -184,27 +186,27 @@ const folderView = [
         name: "sf-xml",
         type: "folder",
         data: [
-          { name: ".gitignore", type: "file" },
-          { name: "main.sf", type: "file" },
-          { name: ".sf.env", type: "file" },
+          { name: ".gitignore", type: "file", content: ".env\n.sf.env" },
+          { name: "main.sf", type: "file", content: "Default data goes here" },
+          { name: ".sf.env", type: "file", content: "Default data goes here" },
         ],
       },
       {
         name: "lilac-ui",
         type: "folder",
         data: [
-          { name: ".gitignore", type: "file" },
-          { name: "main.sf", type: "file" },
-          { name: ".sf.env", type: "file" },
+          { name: ".gitignore", type: "file", content: ".env\n.sf.env" },
+          { name: "main.sf", type: "file", content: "Default data goes here" },
+          { name: ".sf.env", type: "file", content: "Default data goes here" },
         ],
       },
       {
         name: "april",
         type: "folder",
         data: [
-          { name: ".gitignore", type: "file" },
-          { name: "main.sf", type: "file" },
-          { name: ".sf.env", type: "file" },
+          { name: ".gitignore", type: "file", content: ".env\n.sf.env" },
+          { name: "main.sf", type: "file", content: "Default data goes here" },
+          { name: ".sf.env", type: "file", content: "Default data goes here" },
         ],
       },
     ],
@@ -212,11 +214,14 @@ const folderView = [
   {
     name: "Scratches and Consoles",
     type: "file",
-    data: [],
+    content: "test file",
   },
 ];
 
-function MakeFolderView({ folder }: any) {
+function MakeFolderView({ directory }: any) {
+  const { folder, updateFolder } = useExplorer();
+  const { files, updateFiles } = useFileEntry();
+
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
     {}
   );
@@ -230,9 +235,10 @@ function MakeFolderView({ folder }: any) {
 
   return (
     <div className="w-full h-full">
-      {Array.isArray(folder) ? (
+      {/* {JSON.stringify(files)} */}
+      {Array.isArray(directory) ? (
         <ul className="space-y-1">
-          {folder.map((item, index) => {
+          {directory.map((item, index) => {
             const isExpanded = expandedItems[`${index}-${item.name}`];
 
             return (
@@ -256,20 +262,33 @@ function MakeFolderView({ folder }: any) {
                       <span className="font-medium">{item.name}</span>
                     </>
                   ) : (
-                    <>
+                    <div
+                      className="flex gap-1 items-center"
+                      onClick={() =>
+                        updateFiles([
+                          ...files.map((i, key) => {
+                            return { ...i, isActive: false };
+                          }),
+                          {
+                            name: item.name,
+                            content: item.content,
+                            isActive: true,
+                          },
+                        ])
+                      }
+                    >
                       <ClipboardIcon size={18} className="text-gray-600" />
                       <span>{item.name}</span>
-                    </>
+                    </div>
                   )}
                 </div>
 
-                {/* Render child items recursively only if expanded */}
                 {item.type === "folder" && item.data && isExpanded && (
                   <div className="pl-6 mt-1 relative">
                     {item.data.length > 0 && (
                       <div className="absolute left-2 top-0 bottom-4 border-l border-gray-300"></div>
                     )}
-                    <MakeFolderView folder={item.data} />
+                    <MakeFolderView directory={item.data} />
                   </div>
                 )}
               </li>
@@ -300,6 +319,144 @@ function RightsideBar() {
 }
 
 export default function Workspace() {
+  const { folder, updateFolder } = useExplorer();
+  const { files, updateFiles } = useFileEntry();
+
+  function FileTabs() {
+    const { files, updateFiles } = useFileEntry();
+
+    const handleTabClick = (index: number) => {
+      updateFiles(
+        files.map((file, i) => ({
+          ...file,
+          isActive: i === index,
+        }))
+      );
+    };
+
+    const handleTabClose = (e: React.MouseEvent, index: number) => {
+      e.stopPropagation();
+      const newFiles = [...files].filter((_, i) => i !== index);
+
+      if (files[index].isActive && newFiles.length > 0) {
+        const newActiveIndex = Math.min(index, newFiles.length - 1);
+        newFiles[newActiveIndex].isActive = true;
+      }
+
+      updateFiles(newFiles);
+    };
+
+    return (
+      <div className="w-full relative">
+        <div className="flex relative">
+          <div
+            className="w-full max-w-[75vw] overflow-x-scroll flex bg-white border-b border-gray-300/40 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent scroll-smooth [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-none"
+            id="tabs-container"
+            ref={(el) => {
+              if (el && files.length > 0) {
+                const activeTab =
+                  el.children[files.findIndex((f) => f.isActive)];
+                if (activeTab) {
+                  activeTab.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                    inline: "nearest",
+                  });
+                }
+              }
+            }}
+          >
+            {files.length > 0 ? (
+              files.map((file, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleTabClick(index)}
+                  className={`flex items-center min-w-[10vw] px-3 py-2 border-r border-gray-300/40 cursor-pointer gap-2 ${
+                    file.isActive
+                      ? "bg-white border-b-2 border-b-blue-500"
+                      : "bg-gray-50 hover:bg-gray-100"
+                  }`}
+                  title={file.name}
+                >
+                  <ClipboardIcon
+                    size={16}
+                    className="text-gray-600 flex-shrink-0"
+                  />
+                  <span className="truncate text-sm max-w-[150px]">
+                    {file.name}
+                  </span>
+                  <div className="mx-auto"></div>
+                  <button
+                    onClick={(e) => handleTabClose(e, index)}
+                    className="ml-1 text-gray-400 hover:text-gray-700 rounded-full h-5 w-5 flex items-center justify-center flex-shrink-0 hover:bg-gray-200"
+                    title="Close"
+                  >
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="w-full h-full bg-white"></div>
+            )}
+          </div>
+
+          {files.length > 3 && (
+            <>
+              <button
+                className="absolute left-0 top-1/2 -translate-y-1/2 bg-white shadow-md rounded-full p-1 hover:bg-gray-100 z-10"
+                onClick={() => {
+                  const container = document.getElementById("tabs-container");
+                  if (container)
+                    container.scrollBy({ left: -150, behavior: "smooth" });
+                }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <button
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-white shadow-md rounded-full p-1 hover:bg-gray-100 z-10"
+                onClick={() => {
+                  const container = document.getElementById("tabs-container");
+                  if (container)
+                    container.scrollBy({ left: 150, behavior: "smooth" });
+                }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen max-h-screen overflow-hidden w-full bg-gray-100 flex flex-col">
       <div className="w-full flex items-center gap-2 px-4 py-3 bg-[rgb(53,86,149)]">
@@ -354,13 +511,18 @@ export default function Workspace() {
           </div>
 
           <div className="p-4 max-h-[68vh] overflow-scroll">
-            <MakeFolderView folder={folderView} />
+            <MakeFolderView directory={folder} />
           </div>
         </div>
 
         <div className="col-span-15">
-          <div className="h-full">
-            <EditorMenuMonaco />
+          <div className="grid h-full pb-2 grid-rows-15">
+            <div className="row-span-1">
+              <FileTabs />
+            </div>
+            <div className="row-span-14">
+              <EditorMenuMonaco />
+            </div>
           </div>
         </div>
 
